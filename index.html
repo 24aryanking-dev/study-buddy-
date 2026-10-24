@@ -1,0 +1,472 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5146e5">
+<title>Study Buddy - AI Learning App</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Arial,sans-serif;
+ background:#f4f6ff;color:#20243a
+}
+header{
+ background:linear-gradient(135deg,#5146e5,#8175ff);
+ color:white;padding:22px 17px;border-radius:0 0 24px 24px
+}
+header h1{margin:0 0 8px;font-size:27px}
+header p{margin:0;font-size:14px}
+nav{
+ display:flex;gap:8px;overflow-x:auto;padding:12px;
+ background:white;position:sticky;top:0;z-index:2
+}
+nav button{
+ border:0;border-radius:20px;padding:11px 15px;
+ background:#eeeeff;color:#5146e5;font-weight:bold;
+ white-space:nowrap
+}
+nav button.active{background:#5146e5;color:white}
+main{padding:15px;max-width:850px;margin:auto}
+.panel{display:none}
+.panel.active{display:block}
+.card{
+ background:white;border-radius:17px;padding:17px;
+ margin-bottom:14px;box-shadow:0 3px 14px #25265b0c
+}
+h2{font-size:21px;margin-top:0}
+h3{font-size:17px}
+input,textarea,select{
+ width:100%;padding:12px;margin:6px 0 12px;
+ border:1px solid #d9dcef;border-radius:10px;
+ font:inherit;background:white
+}
+textarea{resize:vertical;min-height:90px}
+.btn{
+ background:#5146e5;color:white;border:0;
+ border-radius:10px;padding:12px 15px;
+ font-weight:bold;cursor:pointer;margin:3px 2px
+}
+.btn.secondary{background:#eeeeff;color:#5146e5}
+.result{
+ background:#f3f2ff;padding:13px;border-radius:10px;
+ white-space:pre-wrap;line-height:1.6;margin-top:10px
+}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{
+ background:white;border-radius:15px;padding:17px;
+ border:1px solid #eeeefa;cursor:pointer
+}
+.tile strong{display:block;margin-bottom:7px}
+.small{font-size:13px;color:#747991}
+.progress{height:10px;background:#e8e8f8;border-radius:10px;overflow:hidden}
+.progress div{height:100%;width:0;background:#5146e5}
+.question{padding:12px 0;border-bottom:1px solid #eee}
+#chatLog{max-height:330px;overflow:auto}
+.message{padding:11px;border-radius:12px;margin:8px 0;white-space:pre-wrap}
+.user{background:#e8e6ff;margin-left:18px}
+.bot{background:#f0f2f8;margin-right:18px}
+footer{text-align:center;padding:20px;color:#777;font-size:12px}
+@media(max-width:450px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>📚 Study Buddy</h1>
+  <p>Your personal learning companion</p>
+  <p style="margin-top:12px">Learn • Practise • Improve</p>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('home',this)">Home</button>
+  <button onclick="showTab('notes',this)">Notes</button>
+  <button onclick="showTab('quiz',this)">Quiz</button>
+  <button onclick="showTab('planner',this)">Planner</button>
+  <button onclick="showTab('ai',this)">AI Tutor</button>
+  <button onclick="showTab('coding',this)">Code Lab</button>
+</nav>
+
+<main>
+
+<section id="home" class="panel active">
+  <div class="card">
+    <h2>👋 Welcome to Study Buddy!</h2>
+    <p>Make every study session count.</p>
+    <label for="studentName">Your name</label>
+    <input id="studentName" placeholder="Enter your name">
+    <button class="btn" onclick="saveName()">Save name</button>
+    <p id="welcome"></p>
+  </div>
+
+  <div class="grid">
+    <div class="tile" onclick="showTab('notes')">
+      <strong>📖 Study Notes</strong>
+      <span class="small">Learn important concepts</span>
+    </div>
+    <div class="tile" onclick="showTab('quiz')">
+      <strong>📝 Quick Quiz</strong>
+      <span class="small">Test your knowledge</span>
+    </div>
+    <div class="tile" onclick="showTab('planner')">
+      <strong>📅 Study Planner</strong>
+      <span class="small">Organise your day</span>
+    </div>
+    <div class="tile" onclick="showTab('ai')">
+      <strong>🤖 AI Tutor</strong>
+      <span class="small">Ask study questions</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🎯 Your study progress</h3>
+    <p id="progressText">0 tasks completed</p>
+    <div class="progress"><div id="progressBar"></div></div>
+    <p class="small">Progress updates when you complete planner tasks.</p>
+  </div>
+</section>
+
+<section id="notes" class="panel">
+  <div class="card">
+    <h2>📖 Study Notes</h2>
+    <label for="subject">Choose subject</label>
+    <select id="subject" onchange="loadNotes()">
+      <option value="science">Class 10 Science</option>
+      <option value="biology">Biology: Life Processes</option>
+      <option value="maths">Mathematics</option>
+      <option value="english">English</option>
+    </select>
+    <div id="notesOutput" class="result"></div>
+  </div>
+</section>
+
+<section id="quiz" class="panel">
+  <div class="card">
+    <h2>📝 Science Quiz</h2>
+    <p>Answer the questions and check your score.</p>
+    <div id="quizQuestions"></div>
+    <button class="btn" onclick="checkQuiz()">Check answers</button>
+    <button class="btn secondary" onclick="loadQuiz()">Try again</button>
+    <div id="quizResult" class="result" style="display:none"></div>
+  </div>
+</section>
+
+<section id="planner" class="panel">
+  <div class="card">
+    <h2>📅 Study Planner</h2>
+    <label for="task">Study task</label>
+    <input id="task" placeholder="e.g. Revise Life Processes">
+    <label for="taskDate">Date</label>
+    <input id="taskDate" type="date">
+    <button class="btn" onclick="addTask()">Add task</button>
+    <div id="taskList"></div>
+  </div>
+</section>
+
+<section id="ai" class="panel">
+  <div class="card">
+    <h2>🤖 AI Study Tutor</h2>
+    <p class="small">This built-in demo answers basic study prompts. Connect a secure AI API for real AI-generated responses.</p>
+    <div id="chatLog"></div>
+    <label for="question">Ask your question</label>
+    <textarea id="question" placeholder="Explain photosynthesis in simple words..."></textarea>
+    <button class="btn" onclick="askTutor()">Ask tutor</button>
+    <button class="btn secondary" onclick="clearChat()">Clear chat</button>
+  </div>
+</section>
+
+<section id="coding" class="panel">
+  <div class="card">
+    <h2>💻 Code Lab</h2>
+    <p class="small">Write and preview HTML, CSS and JavaScript in your browser.</p>
+    <label for="language">Language</label>
+    <select id="language" onchange="updateEditor()">
+      <option value="html">HTML</option>
+      <option value="javascript">JavaScript</option>
+      <option value="python">Python (editor only)</option>
+    </select>
+    <label for="code">Your code</label>
+    <textarea id="code" style="min-height:220px;font-family:monospace"></textarea>
+    <button class="btn" onclick="runCode()">Run code</button>
+    <button class="btn secondary" onclick="resetCode()">Reset</button>
+    <h3>Output</h3>
+    <iframe id="output" title="Code output"
+      sandbox="allow-scripts"
+      style="width:100%;height:220px;border:1px solid #ddd;border-radius:10px;background:white"></iframe>
+    <p id="codeMessage" class="small"></p>
+  </div>
+</section>
+
+</main>
+
+<footer>Study Buddy • Learn something new every day 📚</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function showTab(id,button){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  $(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  if(button) button.classList.add('active');
+  else document.querySelectorAll('nav button').forEach(b=>{
+    if(b.getAttribute('onclick')?.includes("'"+id+"'")) b.classList.add('active');
+  });
+}
+
+function saveData(key,value){
+  try{localStorage.setItem(key,JSON.stringify(value));}
+  catch(e){alert('Could not save data in this browser.');}
+}
+function readData(key,fallback){
+  try{
+    const value=localStorage.getItem(key);
+    return value===null?fallback:JSON.parse(value);
+  }catch(e){return fallback;}
+}
+
+function saveName(){
+  const name=$('studentName').value.trim();
+  if(!name){alert('Please enter your name.');return;}
+  saveData('sb_name',name);
+  showWelcome();
+}
+function showWelcome(){
+  const name=readData('sb_name','');
+  $('studentName').value=name;
+  $('welcome').textContent=name?'Welcome, '+name+'! Happy learning.':'';
+}
+
+const notes={
+science:`CLASS 10 SCIENCE — IMPORTANT NOTES
+
+1. Life Processes
+Life processes are the basic activities required to maintain life, such as nutrition, respiration, transportation and excretion.
+
+2. Nutrition
+Nutrition is the process by which organisms obtain food and use it for energy, growth and repair.
+
+3. Photosynthesis
+Green plants prepare food using carbon dioxide and water in the presence of sunlight and chlorophyll.
+
+4. Respiration
+Respiration releases energy from food. Aerobic respiration uses oxygen.
+
+5. Transportation
+In humans, blood transports oxygen, nutrients, hormones and waste products.
+
+6. Excretion
+Excretion is the removal of metabolic waste from the body.`,
+
+biology:`CLASS 10 BIOLOGY — LIFE PROCESSES
+
+TRANSPORTATION IN HUMAN BEINGS
+
+1. Heart
+The heart is a muscular organ that pumps blood throughout the body. It has four chambers: two atria and two ventricles.
+
+2. Arteries
+Arteries carry blood away from the heart. They generally have thick, elastic walls to withstand high blood pressure.
+
+3. Veins
+Veins carry blood towards the heart. They generally have thinner walls and valves that help prevent the backflow of blood.
+
+4. Capillaries
+Capillaries are tiny blood vessels with very thin walls. They allow the exchange of substances between blood and body tissues.
+
+5. Blood
+Blood transports oxygen, nutrients, hormones and waste products.
+
+IMPORTANT POINT
+The pulmonary artery carries deoxygenated blood to the lungs, while the pulmonary vein carries oxygenated blood to the heart.`,
+
+maths:`CLASS 10 MATHEMATICS — REVISION
+
+1. Quadratic equation
+A quadratic equation has the form ax² + bx + c = 0, where a is not zero.
+
+2. Arithmetic progression
+An arithmetic progression has a constant difference between consecutive terms.
+
+3. Probability
+For equally likely outcomes:
+Probability = Favourable outcomes / Total possible outcomes.
+
+4. Pythagoras theorem
+In a right-angled triangle, the square of the hypotenuse equals the sum of the squares of the other two sides.
+
+Revise formulas and practise questions regularly.`,
+
+english:`ENGLISH — STUDY SKILLS
+
+1. Read the question carefully before answering.
+2. Identify the main idea of the passage.
+3. Use correct grammar and punctuation.
+4. Support literature answers with relevant details from the text.
+5. Keep answers clear, organised and appropriate to the word limit.
+6. Practise writing letters, analytical paragraphs and summaries.`
+};
+
+function loadNotes(){
+  $('notesOutput').textContent=notes[$('subject').value];
+}
+const quizData=[
+ {q:'Which organ pumps blood in humans?',a:['Lungs','Heart','Kidneys','Stomach'],correct:1},
+ {q:'Which vessels carry blood away from the heart?',a:['Veins','Capillaries','Arteries','Nerves'],correct:2},
+ {q:'Which gas is used in aerobic respiration?',a:['Nitrogen','Oxygen','Hydrogen','Helium'],correct:1},
+ {q:'Which organ filters blood to form urine?',a:['Heart','Liver','Kidney','Lungs'],correct:2},
+ {q:'What is the basic unit of life?',a:['Tissue','Organ','Cell','Organ system'],correct:2}
+];
+
+function loadQuiz(){
+  $('quizQuestions').innerHTML='';
+  $('quizResult').style.display='none';
+  quizData.forEach((q,i)=>{
+    const div=document.createElement('div');
+    div.className='question';
+    const title=document.createElement('p');
+    title.textContent=(i+1)+'. '+q.q;
+    div.appendChild(title);
+    q.a.forEach((answer,j)=>{
+      const label=document.createElement('label');
+      label.style.display='block';
+      const radio=document.createElement('input');
+      radio.type='radio';radio.name='q'+i;radio.value=j;
+      radio.style.width='auto';radio.style.marginRight='8px';
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode(answer));
+      div.appendChild(label);
+    });
+    $('quizQuestions').appendChild(div);
+  });
+}
+function checkQuiz(){
+  let score=0,unanswered=0;
+  quizData.forEach((q,i)=>{
+    const selected=document.querySelector('input[name="q'+i+'"]:checked');
+    if(!selected)unanswered++;
+    else if(Number(selected.value)===q.correct)score++;
+  });
+  $('quizResult').style.display='block';
+  $('quizResult').textContent='Your score: '+score+'/'+quizData.length+
+    (unanswered?' | Unanswered: '+unanswered:'')+
+    (score===quizData.length?' Excellent work!':' Keep practising and try again.');
+}
+
+let tasks=readData('sb_tasks',[]);
+function renderTasks(){
+  $('taskList').innerHTML='';
+  if(!tasks.length){
+    $('taskList').textContent='No tasks yet. Add your first study task!';
+  }
+  tasks.forEach((t,i)=>{
+    const row=document.createElement('div');
+    row.className='result';
+    const label=document.createElement('label');
+    const cb=document.createElement('input');
+    cb.type='checkbox';cb.checked=t.done;cb.style.width='auto';
+    cb.style.marginRight='8px';
+    cb.addEventListener('change',()=>{
+      tasks[i].done=cb.checked;saveData('sb_tasks',tasks);
+      renderTasks();updateProgress();
+    });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(t.text+' — '+(t.date||'No date')));
+    if(t.done)label.style.textDecoration='line-through';
+    row.appendChild(label);
+    const del=document.createElement('button');
+    del.className='btn secondary';del.textContent='Delete';
+    del.addEventListener('click',()=>{
+      tasks.splice(i,1);saveData('sb_tasks',tasks);
+      renderTasks();updateProgress();
+    });
+    row.appendChild(del);
+    $('taskList').appendChild(row);
+  });
+}
+function addTask(){
+  const text=$('task').value.trim();
+  if(!text){alert('Enter a study task first.');return;}
+  tasks.push({text,date:$('taskDate').value,done:false});
+  saveData('sb_tasks',tasks);
+  $('task').value='';
+  renderTasks();updateProgress();
+}
+function updateProgress(){
+  const done=tasks.filter(t=>t.done).length;
+  $('progressText').textContent=done+' of '+tasks.length+' tasks completed';
+  $('progressBar').style.width=(tasks.length?done/tasks.length*100:0)+'%';
+}
+
+function addMessage(text,who){
+  const div=document.createElement('div');
+  div.className='message '+who;
+  div.textContent=text;
+  $('chatLog').appendChild(div);
+  $('chatLog').scrollTop=$('chatLog').scrollHeight;
+}
+function askTutor(){
+  const question=$('question').value.trim();
+  if(!question){alert('Please type a question.');return;}
+  addMessage(question,'user');
+  $('question').value='';
+  const q=question.toLowerCase();
+  let answer='This demo tutor has limited built-in answers. Try asking about photosynthesis, respiration, arteries, veins, capillaries, or life processes. For detailed AI answers, connect a real AI API through a secure backend.';
+  if(q.includes('photosynthesis')){
+    answer='Photosynthesis is the process by which green plants make food from carbon dioxide and water using sunlight and chlorophyll. Oxygen is released during this process.';
+  }else if(q.includes('respiration')){
+    answer='Respiration is the process of breaking down food to release energy. Aerobic respiration uses oxygen and usually releases more energy than anaerobic respiration.';
+  }else if(q.includes('arter')){
+    answer='Arteries carry blood away from the heart. Their thick, elastic walls help them withstand the high pressure of blood pumped by the heart.';
+  }else if(q.includes('vein')){
+    answer='Veins carry blood towards the heart. They generally have thinner walls than arteries and valves that help prevent the backflow of blood.';
+  }else if(q.includes('capillar')){
+    answer='Capillaries are very small blood vessels with thin walls. They allow the exchange of oxygen, nutrients and waste products between blood and body tissues.';
+  }else if(q.includes('life process')){
+    answer='Life processes are essential activities that maintain life. In Class 10 Science, the main life processes are nutrition, respiration, transportation and excretion.';
+  }else if(q.includes('hello')||q.includes('hi')){
+    answer='Hello! I am your Study Buddy demo tutor. Ask me a Science question to get started.';
+  }
+  addMessage(answer,'bot');
+}
+function clearChat(){$('chatLog').innerHTML='';}
+
+const samples={
+ html:'<!DOCTYPE html><html><body><h1>Hello, Study Buddy!</h1><p>My first web page.</p></body></html>',
+ javascript:'console.log("Hello, Study Buddy!");\ndocument.body.innerHTML = "<h2>Hello from JavaScript!</h2>";',
+ python:'print("Hello, Study Buddy!")'
+};
+function updateEditor(){$('code').value=samples[$('language').value];$('codeMessage').textContent='';}
+function resetCode(){updateEditor();$('output').srcdoc='';}
+function runCode(){
+  const lang=$('language').value;
+  const code=$('code').value;
+  const frame=$('output');
+  if(lang==='html'){
+    frame.srcdoc=code;
+    $('codeMessage').textContent='HTML preview loaded.';
+  }else if(lang==='javascript'){
+    const safeCode=code.replace(/<\/script/gi,'<\\/script');
+    frame.srcdoc='<body><script>'+safeCode+'<\/script></body>';
+    $('codeMessage').textContent='JavaScript ran in a sandboxed preview.';
+  }else{
+    frame.srcdoc='<body style="font-family:Arial;padding:12px"><h3>Python preview</h3><p>This app can edit Python code, but it does not include a Python interpreter. Use a Python runtime to execute it.</p></body>';
+    $('codeMessage').textContent='Python execution is not built in.';
+  }
+}
+
+function init(){
+  showWelcome();
+  loadNotes();
+  loadQuiz();
+  renderTasks();
+  updateProgress();
+  updateEditor();
+  $('taskDate').value=new Date().toISOString().slice(0,10);
+}
+init();
+</script>
+</body>
+</html>
